@@ -3,11 +3,13 @@ title: "Sentiment analysis of video games reviews on Amazon"
 author: "Miguel Almodôvar"
 date: "15/06/2022"
 output:
-  html_document: default
-  pdf_document: default
+  md_document:
+  variant: markdown_github
+
 ---
 
 ## Data loading and processing
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(quanteda)
@@ -30,6 +32,7 @@ summary(reviews)
 ```
 
 Create column where overall 5 & 4 = 'good', overall 3 = 'med' and overall 2 & 1 = 'bad'
+
 ```{r}
 reviews <- subset(reviews, overall != 3)
 reviews <- reviews %>% mutate(sentiment =
@@ -55,10 +58,10 @@ reviews <- rbind(goodsample,badsample)
 summary(reviews)
 ```
 
-
 ## Processing text and creating corpus
 
 Create corpus and remove stopwords, only keeping some important ones that can indicate sentiment
+
 ```{r}
 custom_english <- stopwords("english")[! stopwords("english") %in% c("isn't",      "aren't",     "wasn't" ,    "weren't"  ,  "hasn't"  ,   "haven't"  ,  "hadn't"  ,   "doesn't",    "don't" ,     "didn't","won't","wouldn't","shan't","shouldn't","can't","cannot","couldn't",   "mustn't","no","nor","not")]
 corp <- corpus(reviews, text_field = 'reviewText')
@@ -70,7 +73,6 @@ dtm <- corp |>
   dfm()
 
 ```
-
 
 Word cloud for 'good' reviews
 
@@ -90,6 +92,7 @@ ggp
 ```
 
 Word cloud for 'bad' reviews
+
 ```{r}
 textplot_wordcloud(dfm_subset(dtm, sentiment == "bad"),max_words=100,rotation=0,min_size=1) 
 ```
@@ -105,7 +108,9 @@ ggp
 ```
 
 ## Building the model and testing
+
 Get the training and testing sets (80% for training 20% for testing)
+
 ```{r}
 
 set.seed(300)
@@ -123,11 +128,14 @@ dfmat_training <- dfm_subset(dtm, !docvars(dtm)$ID %in% id_train)
 ```
 
 We'll be using the naive bayes model to classify the documents. From the training summary we can see some feature scores and notice that positive words like 'love' have a higher score for 'good' and negative words like 'hate' have higher score for 'bad'.
+
 ```{r}
 tmod_nb <- textmodel_nb(dfmat_training, docvars(dfmat_training)$sentiment)
 summary(tmod_nb)
 ```
+
 Now we test our model. We can see that the accuracy we got was 82% which is acceptable for a model of this size. Its important to note that Naive Bayes assumes predictors as being totally independent from each other, and that never happens in language. However due to its speed, this algorithm is still widely used for spam detection and sentiment analysis.
+
 ```{r}
 dfmat_matched <- dfm_match(dfmat_test, features = featnames(dfmat_training))
 actual_class <- docvars(dfmat_matched)$sentiment
@@ -136,8 +144,3 @@ tab_class <- table(actual_class, predicted_class)
 confusionMatrix(tab_class, mode = "everything",positive = 'good')
 confusionMatrix
 ```
-
-
-
-
-
