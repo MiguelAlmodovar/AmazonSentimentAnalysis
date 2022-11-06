@@ -1,3 +1,7 @@
+
+# Sentiment Analysis for Amazon Reviews
+Author: Miguel Almodôvar
+
 ## Data loading and processing
 
 Load the dataset
